@@ -1,10 +1,10 @@
 import os
 from unittest import mock
 
-from smart_env import SmartEnv
 import pytest
 
-from smart_env.exceptions import SmartEnvException, SmartEnvMissing
+from smart_env import SmartEnv
+from smart_env.exceptions import SmartEnvMissing
 
 
 def test_base():
@@ -13,7 +13,7 @@ def test_base():
         "DEFAULT": (str, "1"),
         "INT": int,
     }
-    with mock.patch.dict(os.environ, {'KEY': 'value', "INT": "10"}):
+    with mock.patch.dict(os.environ, {"KEY": "value", "INT": "10"}):
         env = SmartEnv(**CONFIG)
         assert env("KEY") == "value"
         assert env("DEFAULT") == "1"
@@ -22,9 +22,7 @@ def test_base():
 
 @pytest.mark.parametrize("arg", ["1", "true", "T", "yes", "y", "Y", "abc", "True", "TRUE"])
 def test_bool_true(arg):
-    CONFIG = {"arg": (bool, arg),
-              "arg1": bool
-              }
+    CONFIG = {"arg": (bool, arg), "arg1": bool}
     with mock.patch.dict(os.environ, {"arg": arg, "arg1": arg}):
         env = SmartEnv(**CONFIG)
         assert env("arg") is True
@@ -34,9 +32,7 @@ def test_bool_true(arg):
 
 @pytest.mark.parametrize("arg", ["0", "False", "F", "no", "n", "N", "", "FALSE", "False", ""])
 def test_bool_false(arg):
-    CONFIG = {"arg": (bool, arg),
-              "arg1": bool
-              }
+    CONFIG = {"arg": (bool, arg), "arg1": bool}
     with mock.patch.dict(os.environ, {"arg": arg, "arg1": arg}):
         env = SmartEnv(**CONFIG)
         assert env("arg") is False
@@ -46,9 +42,7 @@ def test_bool_false(arg):
 
 @pytest.mark.parametrize("arg", ["0", "False", "F", "no", "n", "N", "", "FALSE", "False", ""])
 def test_storage(arg):
-    CONFIG = {"arg": (bool, arg, False),
-              "arg1": bool
-              }
+    CONFIG = {"arg": (bool, arg, False), "arg1": bool}
     with mock.patch.dict(os.environ, {"arg": arg, "arg1": arg}):
         env = SmartEnv(**CONFIG)
         assert env("arg") is False
@@ -56,31 +50,44 @@ def test_storage(arg):
 
 
 def test_extras():
-    CONFIG = {"optional1": (str, "default_value"),
-              "optional2": (str, "default_value", False),
-              "explicit": (bool, "default_value", "", True),
-              "with_help": (bool, "default_value", "", True, "help"),
-              }
+    CONFIG = {
+        "optional1": (str, "default_value"),
+        "optional2": (str, "default_value", False),
+        "explicit": (bool, "default_value", "", True),
+        "with_help": (bool, "default_value", "", True, "help"),
+    }
     with mock.patch.dict(os.environ, {}):
         env = SmartEnv(**CONFIG)
-        assert env.config["optional1"] == {"cast": str,
-                                           'default': 'default_value',
-                                           'develop': 'default_value',
-                                           'explicit': False, 'help': ''}
-        assert env.config["explicit"] == {"cast": bool, 'default': 'default_value',
-                                          'develop': "",
-                                          'explicit': True, 'help': ''}
-        assert env.config["with_help"] == {"cast": bool, 'default': 'default_value',
-                                           'develop': "",
-                                           'explicit': True, 'help': 'help'}
+        assert env.config["optional1"] == {
+            "cast": str,
+            "default": "default_value",
+            "develop": "default_value",
+            "explicit": False,
+            "help": "",
+        }
+        assert env.config["explicit"] == {
+            "cast": bool,
+            "default": "default_value",
+            "develop": "",
+            "explicit": True,
+            "help": "",
+        }
+        assert env.config["with_help"] == {
+            "cast": bool,
+            "default": "default_value",
+            "develop": "",
+            "explicit": True,
+            "help": "help",
+        }
 
 
 def test_check_explicit():
-    CONFIG = {"optional1": (str, "default_value"),
-              "optional2": (str, "default_value", "", False),
-              "explicit": (str, "default_value", "", True),
-              "arg1": bool
-              }
+    CONFIG = {
+        "optional1": (str, "default_value"),
+        "optional2": (str, "default_value", "", False),
+        "explicit": (str, "default_value", "", True),
+        "arg1": bool,
+    }
     with mock.patch.dict(os.environ, {}):
         env = SmartEnv(**CONFIG)
         assert env.check_explicit() == ["explicit"]
@@ -95,7 +102,6 @@ def test_check_explicit():
 #         SmartEnv(**cfg)
 #     assert str(e.value)
 #     assert e.value.args
-
 
 
 def test_missing():

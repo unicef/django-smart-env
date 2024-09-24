@@ -1,9 +1,8 @@
 import os
+from io import StringIO
 from unittest import mock
 
 import pytest
-from io import StringIO
-
 from django.core.management import call_command
 
 
@@ -42,10 +41,13 @@ def test_develop():
     }
     with mock.patch.dict(os.environ, environ, clear=True):
         call_command("env", stdout=out, develop=True)
-        assert str(out.getvalue()) == """DEBUG=True
+        assert (
+            str(out.getvalue())
+            == """DEBUG=True
 DATABASE_URL=sqlite:///demo.db
 USE_TZ=True
 SECURE_SSL_REDIRECT=False
 SESSION_COOKIE_SECURE=False
 SECRET_KEY=
 """
+        )

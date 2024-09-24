@@ -22,7 +22,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser: "CommandParser") -> None:
 
         parser.add_argument(
-            '-f',
+            "-f",
             "--format",
             action="store",
             dest="format",
@@ -61,7 +61,7 @@ class Command(BaseCommand):
         if options["develop"]:
             if options["changed"]:
                 for entry, cfg in env.config.items():
-                    if cfg['default'] != env.get_develop_value(entry):
+                    if cfg["default"] != env.get_develop_value(entry):
                         self.stdout.write(f"{entry}={env.get_develop_value(entry)}")
             else:
                 for entry, cfg in env.config.items():
@@ -70,7 +70,7 @@ class Command(BaseCommand):
 
         if options["changed"]:
             for entry, cfg in env.config.items():
-                if cfg['default'] != env(entry):
+                if cfg["default"] != env(entry):
                     self.stdout.write(f"{entry}={env.get_develop_value(entry)}")
             return
 

@@ -51,7 +51,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        python-version: [ "3.11", "3.12" ]
+        python-version: [ "3.12" ]
         django-version: [ "4.2", "5.1" ]
       fail-fast: true
     needs: [ changes ]
@@ -66,21 +66,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: 'x64'
       - uses: yezz123/setup-uv@v4
-#
-#      - name: Cache virtualenv
-#        uses: actions/cache@v3
-#        with:
-#          key: venv-${{ runner.os }}-${{ steps.setup_python.outputs.python-version}}-${{ hashFiles('pdm.lock') }}
-#          path: .venv
-#
-#      - name: Test
-#        continue-on-error: true
-#        run: |
-#          uv run pytest tests/ --cov
-##          pip install pdm
-##          pdm venv create -q
-##          pdm install
-
       - name: lint
         if: needs.changes.outputs.lint
         run: |

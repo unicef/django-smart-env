@@ -10,6 +10,7 @@ from smart_env import SmartEnv
 def env():
     return SmartEnv(STORAGE_DEFAULT=(str, ""))
 
+
 @pytest.mark.parametrize(
     "storage",
     [

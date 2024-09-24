@@ -14,24 +14,24 @@ if TYPE_CHECKING:
 
 
 def smart_bool(value: str) -> bool | str:
-    if value in [True, False]:
+    if value in (True, False):
         return value
     if not value:
-        value = False
+        ret = False
     elif value.lower()[0] in ["t", "y", "1"]:
-        value = True
+        ret = True
     elif value.lower()[0] in ["f", "n", "0"]:
-        return False
+        ret = False
     else:
-        value = True
-    return value
+        ret = True
+    return ret
 
 
 class SmartEnv(Env):
     def __init__(self, **scheme: "ConfigItem") -> None:
         self.raw: "dict[str, ConfigItem]" = scheme
         self.explicit: list[str] = []
-        values = {}
+        values: dict[str, Any] = {}
         self.config = {}
         for k, v in scheme.items():
             self.config.setdefault(
@@ -66,12 +66,10 @@ class SmartEnv(Env):
 
         super().__init__(**values)
 
-    def get_develop_value(self, var, cast=None, default=Env.NOTSET, parse_default=False) -> Any:
-        # if var not in self.ENVIRON:
+    def get_develop_value(self, var:str, cast:callable=None, default:Any=Env.NOTSET, parse_default:bool=False) -> Any:
         return self.config[var]["develop"]
-        # return self.get_value(var, cast, default, parse_default)
 
-    def get_value(self, var, cast=None, default=Env.NOTSET, parse_default=False) -> Any:
+    def get_value(self, var:str, cast:callable=None, default:Any=Env.NOTSET, parse_default:bool=False) -> Any:
         try:
             cast = self.scheme[var][0]
         except KeyError:
@@ -85,7 +83,7 @@ class SmartEnv(Env):
             value = smart_bool(value)
         return value
 
-    def bool(self, var, default=Env.NOTSET):
+    def bool(self, var:str, default:Any=Env.NOTSET) -> bool:
         return self.get_value(var, cast=smart_bool, default=default)
 
     def storage(self, value: str) -> dict[str, str | dict[str, Any]] | None:
