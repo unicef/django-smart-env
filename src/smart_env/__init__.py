@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Any, TypeAlias, Union
 
 from environ.environ import Env
 
-from smart_env.exceptions import SmartEnvConfigTypeError, SmartEnvMissing
+from smart_env.exceptions import SmartEnvMissing
 
 if TYPE_CHECKING:
     ItemValue: TypeAlias = Union[str, bool, int, list[str], None]
