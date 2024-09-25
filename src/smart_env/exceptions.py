@@ -1,5 +1,5 @@
 class SmartEnvException(Exception):
-    def __init__(self, key: str)->None:
+    def __init__(self, key: str) -> None:
         self.msg = key
 
 

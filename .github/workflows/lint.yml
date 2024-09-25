@@ -29,7 +29,6 @@ jobs:
       run:
         shell: bash
     outputs:
-      run_tests: ${{steps.changes.outputs.run_tests }}
       lint: ${{steps.changes.outputs.lint }}
     steps:
       - name: Checkout code
@@ -44,17 +43,16 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    name: Test py${{ matrix.python-version }}/dj${{matrix.django-version}}
     defaults:
       run:
         shell: bash
     needs: [ changes ]
-    if: needs.changes.outputs.run_tests || needs.changes.outputs.lint
+    if: needs.changes.outputs.lint
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.1.7
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: 3.12

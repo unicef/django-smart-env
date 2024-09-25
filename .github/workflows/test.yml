@@ -87,8 +87,8 @@ jobs:
       - name: Test
         if: needs.changes.outputs.run_tests
         run: |
-          uv run pytest tests \
-                --cache-dir /.uv/ \
+          uv run --cache-dir /.uv/ \
+              pytest tests \
                 --junit-xml junit-${{ matrix.python-version }}-${{matrix.django-version}}.xml \
                 --cov --cov-report xml
 

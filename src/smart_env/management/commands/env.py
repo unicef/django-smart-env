@@ -53,29 +53,24 @@ class Command(BaseCommand):
         env: SmartEnv = import_string(f"{settings}.{instance}")
         check_failure = False
         pattern = options["format"]
-        #
+        if options["develop"] and options["changed"]:
+            self.stderr.write("--develop and --changed cannot be used together.")
+            return
         if options["check"]:
             for entry in env.check_explicit():
                 self.stdout.write(self.style.ERROR(f"- Missing env variable: {entry}"))
-            return
-        if options["develop"]:
-            if options["changed"]:
-                for entry, cfg in env.config.items():
-                    if cfg["default"] != env.get_develop_value(entry):
-                        self.stdout.write(f"{entry}={env.get_develop_value(entry)}")
-            else:
-                for entry, cfg in env.config.items():
-                    self.stdout.write(f"{entry}={env.get_develop_value(entry)}")
-            return
 
-        if options["changed"]:
+        elif options["develop"]:
+            for entry, cfg in env.config.items():
+                self.stdout.write(f"{entry}={env.get_develop_value(entry)}")
+
+        elif options["changed"]:
             for entry, cfg in env.config.items():
                 if cfg["default"] != env(entry):
                     self.stdout.write(f"{entry}={env.get_develop_value(entry)}")
-            return
-
-        for k, cfg in sorted(env.config.items()):
-            self.stdout.write(pattern.format(key=k, value=env.get_value(k), **cfg))
+        else:
+            for k, cfg in sorted(env.config.items()):
+                self.stdout.write(pattern.format(key=k, value=env.get_value(k), **cfg))
 
         if check_failure and not options["ignore_errors"]:
             raise CommandError("Env check command failure!")

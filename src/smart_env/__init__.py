@@ -66,10 +66,12 @@ class SmartEnv(Env):
 
         super().__init__(**values)
 
-    def get_develop_value(self, var:str, cast:callable=None, default:Any=Env.NOTSET, parse_default:bool=False) -> Any:
+    def get_develop_value(
+        self, var: str, cast: callable = None, default: Any = Env.NOTSET, parse_default: bool = False
+    ) -> Any:
         return self.config[var]["develop"]
 
-    def get_value(self, var:str, cast:callable=None, default:Any=Env.NOTSET, parse_default:bool=False) -> Any:
+    def get_value(self, var: str, cast: callable = None, default: Any = Env.NOTSET, parse_default: bool = False) -> Any:
         try:
             cast = self.scheme[var][0]
         except KeyError:
@@ -83,7 +85,7 @@ class SmartEnv(Env):
             value = smart_bool(value)
         return value
 
-    def bool(self, var:str, default:Any=Env.NOTSET) -> bool:
+    def bool(self, var: str, default: Any = Env.NOTSET) -> bool:
         return self.get_value(var, cast=smart_bool, default=default)
 
     def storage(self, value: str) -> dict[str, str | dict[str, Any]] | None:
