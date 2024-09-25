@@ -109,5 +109,5 @@ jobs:
           flags: unittests
           files: ./coverage.xml
           verbose: false
-          token: ${{env.CODECOV_TOKEN}}
+          token: ${{ secrets.CODECOV_TOKEN }}
           name: codecov-${{env.GITHUB_REF_NAME}}
