@@ -70,9 +70,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: |
-            /root/.cargo/
-            /root/.local/
-            /root/.uv/
+            .uv/
           key: ${{ matrix.python-version }}-${{matrix.django-version}}-venv
 
       - uses: yezz123/setup-uv@v4
@@ -83,16 +81,14 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: |
-            /root/.cargo/
-            /root/.local/
-            /root/.uv/
+            /.uv
           key: ${{ matrix.python-version }}-${{matrix.django-version}}-venv
 
       - name: Test
         if: needs.changes.outputs.run_tests
         run: |
           uv run pytest tests \
-                --cache-dir /root/.uv/ \
+                --cache-dir /.uv/ \
                 --junit-xml junit-${{ matrix.python-version }}-${{matrix.django-version}}.xml \
                 --cov --cov-report xml
 

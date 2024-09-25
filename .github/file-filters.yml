@@ -20,6 +20,8 @@ run_tests:
   - *python
   - *dependencies
   - 'pytest.ini'
+  - '.github/workflows/test.yml'
+  - '.github/file-filters.yml'
 
 migrations:
   - added|modified: 'src/**/migrations/*'
