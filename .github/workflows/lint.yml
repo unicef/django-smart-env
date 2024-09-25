@@ -1,4 +1,4 @@
-name: Test
+name: Lint
 
 on:
   push:
@@ -42,18 +42,12 @@ jobs:
           token: ${{ github.token }}
           filters: .github/file-filters.yml
 
-  ci:
+  lint:
     runs-on: ubuntu-latest
     name: Test py${{ matrix.python-version }}/dj${{matrix.django-version}}
     defaults:
       run:
         shell: bash
-    strategy:
-      max-parallel: 1
-      matrix:
-        python-version: [ "3.12" ]
-        django-version: [ "5.1" ]
-      fail-fast: true
     needs: [ changes ]
     if: needs.changes.outputs.run_tests || needs.changes.outputs.lint
     steps:
@@ -63,29 +57,11 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.12
           architecture: 'x64'
-
-      - name: Test
-        if: needs.changes.outputs.run_tests
+      - uses: yezz123/setup-uv@v4
+      - name: lint
+        if: needs.changes.outputs.lint
         run: |
-          uv run pytest tests --junit-xml junit-${{ matrix.python-version }}-${{matrix.django-version}}.xml
-
-      - name: Upload pytest test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-results-${{ matrix.python-version }}-${{matrix.django-version}}
-          path: junit-${{ matrix.python-version }}-${{matrix.django-version}}.xml
-        if: ${{ always() }}
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        if: ${{ always() }}
-        continue-on-error: true
-        with:
-          env_vars: OS,PYTHON
-          fail_ci_if_error: true
-          files: coverage.xml
-          token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: false
-          name: codecov-${{env.GITHUB_REF_NAME}}
+          uv run isort src/ --check-only
+          uv run flake8 src/
