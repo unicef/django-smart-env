@@ -65,11 +65,34 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: 'x64'
+      - name: Restore cached venv
+        id: cache-venv-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /root/.cargo/
+            /root/.local/
+            /root/.uv/
+          key: ${{ matrix.python-version }}-${{matrix.django-version}}-venv
+
+      - uses: yezz123/setup-uv@v4
+
+      - name: Cache venv
+        if: steps.cache-venv-restore.outputs.cache-hit != 'true'
+        id: cache-venv-save
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            /root/.cargo/
+            /root/.local/
+            /root/.uv/
+          key: ${{ matrix.python-version }}-${{matrix.django-version}}-venv
 
       - name: Test
         if: needs.changes.outputs.run_tests
         run: |
           uv run pytest tests \
+                --cache-dir /root/.uv/ \
                 --junit-xml junit-${{ matrix.python-version }}-${{matrix.django-version}}.xml \
                 --cov --cov-report xml
 
@@ -85,10 +108,9 @@ jobs:
         if: matrix.python-version == 3.12
         continue-on-error: true
         with:
-          directory: ./coverage/reports/
           env_vars: OS,PYTHON
           fail_ci_if_error: true
           flags: unittests
-          files: ./coverage1.xml,./coverage2.xml,!./cache
-          verbose: true
+          files: ./coverage.xml
+          verbose: false
           name: codecov-${{env.GITHUB_REF_NAME}}
