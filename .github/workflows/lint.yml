@@ -21,9 +21,6 @@ permissions:
 jobs:
   changes:
     runs-on: ubuntu-latest
-    concurrency:
-      group: changes-group
-      cancel-in-progress: true
     timeout-minutes: 1
     defaults:
       run:
