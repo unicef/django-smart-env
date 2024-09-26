@@ -3,7 +3,7 @@ name = "django-smart-env"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.9"
 dependencies = [
     "django-environ>=0.11.2",
 ]

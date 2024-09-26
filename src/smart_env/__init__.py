@@ -1,19 +1,19 @@
-from typing import TYPE_CHECKING, Any, TypeAlias, Union
+from typing import TYPE_CHECKING, Any, Union, Optional
 
 from environ.environ import Env
 
 from smart_env.exceptions import SmartEnvMissing
 
 if TYPE_CHECKING:
-    ItemValue: TypeAlias = Union[str, bool, int, list[str], None]
-    ConfigItem: TypeAlias = Union[
+    ItemValue = Union[str, bool, int, list[str], None]
+    ConfigItem = Union[
         tuple[type, ItemValue],  # type, value
         tuple[type, ItemValue, str],  # type, value, help,
         tuple[type, ItemValue, str, Any],  # type, value, hell, develop_value
     ]
 
 
-def smart_bool(value: str) -> bool | str:
+def smart_bool(value: str) -> Union[bool, str]:
     if value in (True, False):
         return value
     if not value:
@@ -88,7 +88,7 @@ class SmartEnv(Env):
     def bool(self, var: str, default: Any = Env.NOTSET) -> bool:
         return self.get_value(var, cast=smart_bool, default=default)
 
-    def storage(self, value: str) -> dict[str, str | dict[str, Any]] | None:
+    def storage(self, value: str) -> Optional[Union[dict[str, Any]]]:
         raw_value = self.get_value(value, str)
         if not raw_value:
             return None
