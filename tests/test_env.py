@@ -124,3 +124,43 @@ def test_missing():
 #             env = SmartEnv()
 #             env("MISSING")
 #         assert str(e.value) == "Missing MISSING"
+
+def test_set_environ_for_test():
+
+    example_variables = {
+    'VAR_1': (str, 'default_1', 'develop_1'),
+    'VAR_2': (int, 1, 2),
+    'VAR_3': (str, 'default_3', 'develop_3'),
+    'VAR_4': (bool, 0, 1),
+    }
+
+    env = SmartEnv(**example_variables)
+
+    changed_variables = {
+    'VAR_1': 'changed_value_1',
+    'VAR_2': 333,
+    'VAR_4': False
+    }
+
+    env.set_environ_for_test(changed_variables)
+
+    assert os.environ['VAR_1'] == 'changed_value_1'
+    assert os.environ['VAR_2'] == '333'
+    assert os.environ['VAR_3'] == 'develop_3'
+    assert os.environ['VAR_4'] == 'False'
+
+
+@pytest.mark.parametrize("new_val", [('VAR_1', '44'), ('VAR_2', 0)])
+def test_environ_for_test_wrong_type(key, new_val):
+    example_variables = {
+    'VAR_1': (int, 2, 22),
+    'VAR_2': (bool, 0, 1),
+    }
+
+    env = SmartEnv(**example_variables)
+
+    changed_variables = {key: new_val}
+
+    with pytest.raises(ValueError, match=f'Value for {key} must be {example_variables[key][0].__name__}'):
+        env.set_environ_for_test(changed_variables)
+
