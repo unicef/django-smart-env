@@ -1,3 +1,4 @@
+import os
 from typing import TYPE_CHECKING, Any, Union, Optional
 
 from environ.environ import Env
@@ -112,3 +113,10 @@ class SmartEnv(Env):
             if cfg["explicit"] and k not in self.ENVIRON:
                 missing.append(k)
         return missing
+
+    def set_environ_for_test(self, dic: dict) -> None:
+        for key, conf in self.config.items():
+            value = dic[key] if key in dic else conf['develop']
+            if not isinstance(value, conf['cast']):
+                raise ValueError(f"Value for {key} must be {conf['cast'].__name__}")
+            os.environ[key] = str(value)
