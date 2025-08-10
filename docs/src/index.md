@@ -17,8 +17,9 @@ package that adds some extra features.
 
 Create a `config.py` in your project root with:
 
-    CONFIG = {"DEBUG": (bool, False, True, False, "Enable/Disable debug mode",
-              "DATABASE_URL": (str, "", "", True, "Database connection URL style"
+    CONFIG = {"DEBUG": (bool, False, True, False, "Enable/Disable debug mode"),
+              "DATABASE_URL": (str, "", "", True, "Database connection URL style"),
+              "ALLOWED_HOSTS": (list, [], ["127.0.0.1", "localhost"], True, "The hosts allowed")
               }
     env = SmartEnv(**CONFIG)
 
@@ -33,7 +34,7 @@ In your `settings.py`:
     ]
 
     DEBUG = env("DEBUG")
-    DATABASES = {"default": env("DATABASE_URL")} 
+    DATABASES = {"default": env.db("DATABASE_URL")} 
 
 Check your configuration
 
