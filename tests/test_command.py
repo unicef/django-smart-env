@@ -21,7 +21,7 @@ def test_env(check, develop, changed):
     with mock.patch.dict(os.environ, environ, clear=True):
         call_command(
             "env",
-            ignore_errors=True if check == 1 else False,
+            ignore_errors=bool(check == 1),
             stdout=out,
             check=check,
             changed=changed,

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from typing import Any, Dict, List
 
 from . import env
 
@@ -21,16 +22,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-7b411*t88@^8_py&b0p7x7x0)tykqxq8ysv+=y*8%#adhc@k-$"
+SECRET_KEY: str = "django-insecure-7b411*t88@^8_py&b0p7x7x0)tykqxq8ysv+=y*8%#adhc@k-$"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG: bool = True
 
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS: List[str] = []
 
 # Application definition
 
-INSTALLED_APPS = [
+INSTALLED_APPS: List[str] = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -40,7 +41,7 @@ INSTALLED_APPS = [
     "smart_env",
 ]
 
-MIDDLEWARE = [
+MIDDLEWARE: List[str] = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -50,9 +51,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "demo.urls"
+ROOT_URLCONF: str = "demo.urls"
 
-TEMPLATES = [
+TEMPLATES: List[Dict[str, Any]] = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [],
@@ -68,24 +69,24 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "demo.wsgi.application"
+WSGI_APPLICATION: str = "demo.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
+DATABASES: Dict[str, Dict[str, Any]] = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
-SESSION_COOKIE_SECURE = env("SESSION_COOKIE_SECURE")
-SECURE_SSL_REDIRECT = env("SECURE_SSL_REDIRECT")
+SESSION_COOKIE_SECURE: bool = env("SESSION_COOKIE_SECURE")
+SECURE_SSL_REDIRECT: bool = env("SECURE_SSL_REDIRECT")
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
-AUTH_PASSWORD_VALIDATORS = [
+AUTH_PASSWORD_VALIDATORS: List[Dict[str, str]] = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
@@ -103,20 +104,20 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE: str = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE: str = "UTC"
 
-USE_I18N = True
+USE_I18N: bool = True
 
-USE_TZ = True
+USE_TZ: bool = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL: str = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD: str = "django.db.models.BigAutoField"

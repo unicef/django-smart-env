@@ -14,5 +14,7 @@ build/
 !.github/
 !.mypy.ini
 !.pre-commit-config.yaml
+src/smart_env/version.py
 !bandit.yaml
 coverage.xml
+junit.xml

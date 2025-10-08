@@ -3,7 +3,7 @@ title: Configuration
 ---
 
 ## Simple usage
-    
+
 Each entry can be one of the following:
 
 - type

@@ -2,8 +2,8 @@
 title: Documentation
 ---
 
-django-smart-env is a small add-on to the [django-environ](https://django-environ.readthedocs.io/en/latest/) 
-package django-smart-env is a small add-on to the [django-environ](https://django-environ.readthedocs.io/en/latest/) 
+django-smart-env is a small add-on to the [django-environ](https://django-environ.readthedocs.io/en/latest/)
+package django-smart-env is a small add-on to the [django-environ](https://django-environ.readthedocs.io/en/latest/)
 package that adds some extra features.
 
 - extend configuration
@@ -25,7 +25,7 @@ Create a `config.py` in your project root with:
 
 
 In your `settings.py`:
-    
+
     from <app>.config import env
 
     INSTALLED_APPS = [
@@ -34,7 +34,7 @@ In your `settings.py`:
     ]
 
     DEBUG = env("DEBUG")
-    DATABASES = {"default": env.db("DATABASE_URL")} 
+    DATABASES = {"default": env.db("DATABASE_URL")}
 
 Check your configuration
 

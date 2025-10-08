@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING
 from django.core.management import BaseCommand, CommandError, CommandParser
 from django.utils.module_loading import import_string
 
-from smart_env import SmartEnv
-
 if TYPE_CHECKING:
     from typing import Any
+
+    from smart_env import SmartEnv
 
 DEVELOP = {
     "DEBUG": True,
@@ -20,7 +20,6 @@ class Command(BaseCommand):
     requires_system_checks = []
 
     def add_arguments(self, parser: "CommandParser") -> None:
-
         parser.add_argument(
             "-f",
             "--format",
@@ -47,7 +46,7 @@ class Command(BaseCommand):
             help="Do not fail",
         )
 
-    def handle(self, *args: "Any", **options: "Any") -> None:
+    def handle(self, *args: "Any", **options: "Any") -> None:  # noqa C901
         settings = os.environ["DJANGO_SETTINGS_MODULE"]
         instance = os.environ.get("SMART_ENV_INSTANCE", "env")
         env: SmartEnv = import_string(f"{settings}.{instance}")
@@ -61,7 +60,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f"- Missing env variable: {entry}"))
 
         elif options["develop"]:
-            for entry, cfg in env.config.items():
+            for entry in env.config:
                 self.stdout.write(f"{entry}={env.get_develop_value(entry)}")
 
         elif options["changed"]:

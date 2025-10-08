@@ -1,22 +1,33 @@
-import os
-from typing import TYPE_CHECKING, Any, Union, Optional
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from environ.environ import Env
 
-from smart_env.exceptions import SmartEnvMissing
+from smart_env.exceptions import SmartEnvMissingVarError
 
 if TYPE_CHECKING:
-    ItemValue = Union[str, bool, int, list[str], None]
-    ConfigItem = Union[
-        tuple[type, ItemValue],  # type, value
-        tuple[type, ItemValue, str],  # type, value, help,
-        tuple[type, ItemValue, str, Any],  # type, value, hell, develop_value
-    ]
+    Cast = Callable[[Any], Any]
+    ConfigItem = (
+        tuple[Cast, Any]  # original config. type,value
+        | tuple[Cast, Any, Any]  # type,value:development value
+        | tuple[Cast, Any, Any, bool]  # type,value:development value,explicit
+        | tuple[Cast, Any, Any, bool, str]  # type,value:development value,explicit,help_text
+        | Cast
+    )
+
+    class ConfigVar(TypedDict):
+        cast: Cast
+        default: Any
+        develop: Any
+        explicit: bool
+        help: str
+
+    SmartConfig = dict[str, ConfigItem]
 
 
-def smart_bool(value: str) -> Union[bool, str]:
+def smart_bool(value: Any) -> bool:
     if value in (True, False):
-        return value
+        return bool(value)
     if not value:
         ret = False
     elif value.lower()[0] in ["t", "y", "1"]:
@@ -28,17 +39,18 @@ def smart_bool(value: str) -> Union[bool, str]:
     return ret
 
 
-class SmartEnv(Env):
-    def __init__(self, **scheme: "ConfigItem") -> None:
-        self.raw: "dict[str, ConfigItem]" = scheme
+class SmartEnv(Env):  # type: ignore[misc]
+    def __init__(self, **scheme: "SmartConfig") -> None:
+        self.raw: SmartConfig = scheme  # type: ignore[assignment]
         self.explicit: list[str] = []
         values: dict[str, Any] = {}
-        self.config = {}
+        self.config: dict[str, ConfigVar] = {}
+
         for k, v in scheme.items():
             self.config.setdefault(
                 k,
                 {
-                    "cast": None,
+                    "cast": lambda x: x,
                     "default": Env.NOTSET,
                     "develop": Env.NOTSET,
                     "explicit": False,
@@ -47,20 +59,16 @@ class SmartEnv(Env):
             )
             try:
                 cast, default_value, *extras = v
-                self.config[k]["cast"] = cast
+                self.config[k]["cast"] = cast  # type: ignore[typeddict-item]
                 self.config[k]["default"] = default_value
                 self.config[k]["develop"] = default_value
                 values[k] = (cast, default_value)
-                if len(extras) >= 1:
+                if len(extras) >= 1:  # noqa PLR2004
                     self.config[k]["develop"] = extras[0]
-                if len(extras) >= 2:
-                    # if not isinstance(extras[1], bool):
-                    #     raise SmartEnvConfigTypeError(k, 1, bool, extras[1])
-                    self.config[k]["explicit"] = extras[1]
-                if len(extras) >= 3:
+                if len(extras) >= 2:  # noqa PLR2004
+                    self.config[k]["explicit"] = bool(extras[1])
+                if len(extras) >= 3:  # noqa PLR2004
                     self.config[k]["help"] = extras[2]
-                    # if not isinstance(extras[2], str):
-                    #     raise SmartEnvConfigTypeError(k, 2, str, extras[2])
 
             except TypeError:
                 values[k] = v
@@ -68,17 +76,19 @@ class SmartEnv(Env):
         super().__init__(**values)
 
     def get_develop_value(
-        self, var: str, cast: callable = None, default: Any = Env.NOTSET, parse_default: bool = False
+        self, var: str, cast: Callable[[Any], Any] | None = None, default: Any = Env.NOTSET, parse_default: bool = False
     ) -> Any:
         return self.config[var]["develop"]
 
-    def get_value(self, var: str, cast: callable = None, default: Any = Env.NOTSET, parse_default: bool = False) -> Any:
+    def get_value(
+        self, var: str, cast: Callable[[Any], Any] | None = None, default: Any = Env.NOTSET, parse_default: bool = False
+    ) -> Any:
         try:
-            cast = self.scheme[var][0]
+            cast = self.raw[var][0]  # type: ignore[index]
         except KeyError:
-            raise SmartEnvMissing(var)
+            raise SmartEnvMissingVarError(var) from None
         except TypeError:
-            cast = self.scheme[var]
+            cast = self.raw[var]  # type: ignore[assignment]
             if cast is bool:
                 cast = smart_bool
         value = super().get_value(var, cast, default, parse_default)
@@ -87,9 +97,9 @@ class SmartEnv(Env):
         return value
 
     def bool(self, var: str, default: Any = Env.NOTSET) -> bool:
-        return self.get_value(var, cast=smart_bool, default=default)
+        return bool(self.get_value(var, cast=smart_bool, default=default))
 
-    def storage(self, value: str) -> Optional[Union[dict[str, Any]]]:
+    def storage(self, value: str) -> dict[str, Any] | None:
         raw_value = self.get_value(value, str)
         if not raw_value:
             return None
@@ -104,7 +114,7 @@ class SmartEnv(Env):
 
         return {"BACKEND": value, "OPTIONS": options}
 
-    def is_valid(self) -> bool:
+    def is_valid(self) -> bool:  # type: ignore[valid-type] # noqa: A003
         return not self.check_explicit()
 
     def check_explicit(self) -> list[str]:
@@ -113,10 +123,3 @@ class SmartEnv(Env):
             if cfg["explicit"] and k not in self.ENVIRON:
                 missing.append(k)
         return missing
-
-    def set_environ_for_test(self, dic: dict) -> None:
-        for key, conf in self.config.items():
-            value = dic[key] if key in dic else conf['develop']
-            if not isinstance(value, conf['cast']):
-                raise ValueError(f"Value for {key} must be {conf['cast'].__name__}")
-            os.environ[key] = str(value)

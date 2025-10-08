@@ -6,7 +6,7 @@ import pytest
 from smart_env import SmartEnv
 
 
-@pytest.fixture()
+@pytest.fixture
 def env():
     return SmartEnv(STORAGE_DEFAULT=(str, ""))
 

@@ -6,7 +6,7 @@ import django
 
 here = Path(__file__).parent
 sys.path.insert(0, str(here / "../src"))
-sys.path.insert(0, str(here / "demoapp"))
+sys.path.insert(0, str(here / "_demoapp"))
 
 
 def pytest_configure(config):
