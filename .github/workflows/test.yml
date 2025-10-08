@@ -1,22 +1,13 @@
 name: Test
 
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - '**'        # matches every branch
-
-concurrency:
-  group: "${{ github.workflow }}-${{ github.ref }}-test"
-  cancel-in-progress: true
-
-defaults:
-  run:
-    shell: bash
-
-permissions:
-  id-token: write
-  attestations: write
-
+    branches: [ "develop" ]
+    tags-ignore: [ "**" ]
+  pull_request:
+#  schedule:
+#    - cron: "0 8 * * *"
 
 jobs:
   changes:
@@ -26,11 +17,10 @@ jobs:
       run:
         shell: bash
     outputs:
-      run_tests: ${{steps.changes.outputs.run_tests }}
-      lint: ${{steps.changes.outputs.lint }}
+      run_tests: ${{ steps.changes.outputs.run_tests }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v5
       - id: changes
         name: Check for file changes
         uses: dorny/paths-filter@0bc4621a3135347011ad047f9ecf449bf72ce2bd # v3.0.0
@@ -39,72 +29,81 @@ jobs:
           token: ${{ github.token }}
           filters: .github/file-filters.yml
 
-  ci:
-    runs-on: ubuntu-latest
-    name: Test py${{ matrix.python-version }}/dj${{matrix.django-version}}
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      max-parallel: 1
-      matrix:
-        python-version: [ "3.9", "3.12" ]
-        django-version: [ "4.2", "5.1" ]
-      fail-fast: true
+  test:
     needs: [ changes ]
-    if: needs.changes.outputs.run_tests || needs.changes.outputs.lint
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.run_tests == 'true'
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:14
+        env:
+          POSTGRES_DATABASE: country_workspace
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USERNAME: postgres
+        ports:
+          - 15432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    strategy:
+      fail-fast: false
+      matrix:
+        cfg: ["d52-py313", "d42-py312", "d32-py312"]
+    env:
+      STREAMING_BROKER_URL: rabbit://guest:guest@localhost:10000?exchange=hope_live
+      DATABASE_URL: postgres://postgres:postgres@localhost:15432/country_workspace
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4.1.7
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          architecture: 'x64'
-      - name: Restore cached venv
-        id: cache-venv-restore
-        uses: actions/cache/restore@v4
+          fetch-depth: 0
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
         with:
-          path: |
-            .uv/
-          key: ${{ matrix.python-version }}-${{matrix.django-version}}-venv
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
+          cache-suffix: ${{ matrix.cfg }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          python-version: ${{ matrix.python }}
 
-      - uses: yezz123/setup-uv@v4
+      - name: Install tox
+        run: uv tool install --python-preference only-managed --python 3.13 tox --with tox-uv --with tox-gh-actions
 
-      - name: Cache venv
-        if: steps.cache-venv-restore.outputs.cache-hit != 'true'
-        id: cache-venv-save
-        uses: actions/cache/save@v4
+      - name: Setup test suite
+        run: tox run -vv --notest --skip-missing-interpreters false -e ${{ matrix.cfg }}
+
+      - name: Run test suite ${{ matrix.cfg }}
+        run: tox -e ${{ matrix.cfg }}
+
+      - name: Archive selenium results
+        uses: actions/upload-artifact@v4
+        if: failure()
         with:
-          path: |
-            .uv
-          key: ${{ matrix.python-version }}-${{matrix.django-version}}-venv
-
-      - name: Test
-        if: needs.changes.outputs.run_tests
-        run: |
-          uv run --cache-dir .uv/ \
-              pytest tests \
-                --junit-xml junit-${{ matrix.python-version }}-${{matrix.django-version}}.xml \
-                --cov --cov-report xml
+          name: selenium-log-report
+          path: latest_logs
+          retention-days: 5
 
       - name: Upload pytest test results
         uses: actions/upload-artifact@v4
         with:
-          name: pytest-results-${{ matrix.python-version }}-${{matrix.django-version}}
-          path: junit-${{ matrix.python-version }}-${{matrix.django-version}}.xml
+          name: pytest-results-${{ matrix.cfg }}
+          path: junit.xml
         if: ${{ always() }}
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        if: matrix.python-version == 3.12
+        uses: codecov/codecov-action@v5
         continue-on-error: true
         with:
           env_vars: OS,PYTHON
           fail_ci_if_error: true
           flags: unittests
           files: ./coverage.xml
-          verbose: false
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           name: codecov-${{env.GITHUB_REF_NAME}}
+          slug: ${{ github.repository }}
